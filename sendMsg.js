@@ -7,7 +7,7 @@ let cfile = process.argv[2];
     let browser = await puppeteer.launch({
         headless : false,
         defaultViewport : null,
-        slowMo : 30,
+        slowMo : 20,
         args: ['--start-maximized', '--disable-notifications']
     });
     let contents = await fs.promises.readFile(cfile, 'utf-8');
@@ -33,20 +33,21 @@ let cfile = process.argv[2];
     let allFriends = await page.$$('.fbChatOrderedList li');
     for(let i = 0; i < allFriends.length; i++){
         let lists = allFriends[i];
-        let element = await lists.$("._42fz");
-        let links = await (await lists.$("._42fz a")).getProperty('href');
-        let linksjson = await links.jsonValue();
-        let text = await lists.evaluate(element => element.textContent, element);
-        let page2 = pages[1];
-        let linksWillBeClicked = await page2.goto(linksjson, {
-                                        waitUntil: 'networkidle2'
-                                    });
+        let element = await lists.$("._42fz a");
+        let name = await lists.$("div._55lr");
+        let text = await lists.evaluate(name => name.textContent, name);
+        if(text == 'Create new group' || text == 'Design0'){
+            continue;
+        }
+        let linksWillBeClicked = await element.click();
         await page.waitForSelector('._5rp7._5rp8', {
-        visible : true
-        });
+                                    visible : true
+                                    });
         await page.type('._5rp7._5rp8', 'hi ' + text);
         await page.keyboard.press('Enter');
-        await page.close();
+        await page.waitFor(2000);
+        await page.click('div.close');
     }
+    await page.click('._ohf.rfloat');
 
 })();
